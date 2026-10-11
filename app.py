@@ -35,14 +35,29 @@ except Exception as e:
     st.error(f"Could not load the dataset: {e}")
     st.stop()
 
-with st.sidebar:
-    st.header("Filters")
-    seasons = sorted(df["season"].dropna().astype(str).unique())
-    selected_seasons = st.multiselect("Season", seasons, default=seasons)
-    teams = sorted(set(df["batting_team"].dropna()) | set(df["bowling_team"].dropna()))
-    selected_teams = st.multiselect("Teams", teams, default=teams)
-    min_balls = st.slider("Minimum legal balls for player rankings", 0, 1000, 120, 30)
-    st.caption("Rankings with small samples can be misleading. Adjust the minimum-ball threshold.")
+seasons = sorted(df["season"].dropna().astype(str).unique())
+teams = sorted(set(df["batting_team"].dropna()) | set(df["bowling_team"].dropna()))
+
+# Keep global filters accessible without a permanently occupied sidebar.
+with st.popover("⚙️ Filters", width="content"):
+    st.caption("Choose seasons and teams to filter the dashboard.")
+    selected_seasons = st.multiselect(
+        "Seasons",
+        seasons,
+        default=seasons,
+        key="global_seasons",
+        placeholder="Select seasons",
+    )
+    selected_teams = st.multiselect(
+        "Teams",
+        teams,
+        default=teams,
+        key="global_teams",
+        placeholder="Select teams",
+    )
+    st.caption("All seasons and teams are selected by default.")
+
+# Ranking thresholds are configured inside the Batting and Bowling tabs.
 
 f = df[df["season"].isin(selected_seasons) & df["batting_team"].isin(selected_teams)].copy()
 if f.empty:
@@ -148,7 +163,7 @@ with tabs[0]:
                         "Cumulative_runs": "Cumulative team runs",
                     },
                 )
-                st.plotly_chart(fig_progression, use_container_width=True)
+                st.plotly_chart(fig_progression, width="stretch")
 
                 if "phase" in innings_data.columns:
                     phase_summary = (
@@ -170,7 +185,7 @@ with tabs[0]:
                         hover_data=["Overs", "Runs per over"],
                         title="Runs by Match Phase",
                     )
-                    st.plotly_chart(fig_phase, use_container_width=True)
+                    st.plotly_chart(fig_phase, width="stretch")
 
                 if "is_wicket" in innings_data.columns:
                     wicket_data = innings_data.copy()
@@ -198,15 +213,24 @@ with tabs[0]:
                             "Cumulative_wickets": "Cumulative wickets",
                         },
                     )
-                    st.plotly_chart(fig_wickets, use_container_width=True)
+                    st.plotly_chart(fig_wickets, width="stretch")
         else:
             st.info("No innings are available for this match.")
     else:
         st.info("Match progression requires match ID, innings, over number, and total runs.")
 with tabs[1]:
     st.subheader("Batting performance")
+    batting_threshold = st.slider(
+        "Minimum legal balls faced",
+        min_value=0,
+        max_value=1000,
+        value=120,
+        step=30,
+        key="batting_min_balls",
+        help="Exclude small-sample batting records from the rankings.",
+    )
     bt = batting_table(f)
-    bt = bt[bt["balls_faced"] >= min_balls]
+    bt = bt[bt["balls_faced"] >= batting_threshold]
     st.plotly_chart(px.scatter(bt, x="strike_rate", y="average", size="runs", hover_name="player", title="Batting average vs strike rate (bubble size = runs)"), width="stretch")
     st.dataframe(bt.sort_values("runs", ascending=False), width="stretch", hide_index=True)
     players = sorted(f["striker"].dropna().unique())
@@ -441,7 +465,7 @@ with tabs[1]:
                         "striker": "Batter",
                     },
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
 
                 st.markdown("#### Selected Batter Comparison")
                 display_columns = [
@@ -457,7 +481,7 @@ with tabs[1]:
                     comparison_data[display_columns]
                     .sort_values("Total_runs", ascending=False)
                     .round(2),
-                    use_container_width=True,
+                    width="stretch",
                     hide_index=True,
                 )
 
@@ -473,12 +497,21 @@ with tabs[1]:
                             "striker": "Batter",
                         },
                     )
-                    st.plotly_chart(boundary_chart, use_container_width=True)
+                    st.plotly_chart(boundary_chart, width="stretch")
 
 with tabs[2]:
     st.subheader("Bowling performance")
     bw = bowling_table(f)
-    bw = bw[bw["legal_balls"] >= min_balls]
+    bowling_threshold = st.slider(
+        "Minimum legal balls bowled",
+        min_value=0,
+        max_value=1000,
+        value=120,
+        step=30,
+        key="bowling_min_balls",
+        help="Exclude small-sample bowling records from the rankings.",
+    )
+    bw = bw[bw["legal_balls"] >= bowling_threshold]
     st.plotly_chart(px.scatter(bw, x="economy", y="wickets", size="legal_balls", hover_name="player", title="Bowling economy vs wickets (bubble size = legal balls)"), width="stretch")
     st.dataframe(bw.sort_values("wickets", ascending=False), width="stretch", hide_index=True)
 
@@ -748,7 +781,7 @@ with tabs[3]:
                 title=f"Dismissals of {chosen_batter} against {chosen_bowler}",
                 text="Dismissals",
             )
-            st.plotly_chart(fig_dismissals, use_container_width=True)
+            st.plotly_chart(fig_dismissals, width="stretch")
         else:
             st.info("No recorded dismissals for this batter-bowler pairing.")
 
@@ -802,7 +835,7 @@ with tabs[3]:
                     ["Runs_per_legal_ball", "Dismissals"],
                     ascending=[True, False],
                 ).head(15).round(2),
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
             )
 
@@ -812,7 +845,7 @@ with tabs[3]:
                     ["Dismissals", "Legal_balls"],
                     ascending=[False, False],
                 ).head(15).round(2),
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
             )
 
@@ -832,7 +865,7 @@ with tabs[3]:
                     "Dismissals": "Dismissals",
                 },
             )
-            st.plotly_chart(fig_matchups, use_container_width=True)
+            st.plotly_chart(fig_matchups, width="stretch")
 
 with tabs[4]:
     st.subheader("Team and Tactical Phase Analysis")
@@ -1105,7 +1138,7 @@ with tabs[4]:
             )
             fig_strategy.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
             fig_strategy.update_layout(yaxis_range=[0, 100], showlegend=False)
-            st.plotly_chart(fig_strategy, use_container_width=True)
+            st.plotly_chart(fig_strategy, width="stretch")
 
             season_strategy = (
                 strategy.groupby("season", dropna=True)
@@ -1142,7 +1175,7 @@ with tabs[4]:
                 title="Batting First vs Chasing Win Rate by Season",
             )
             fig_season_strategy.update_layout(yaxis_range=[0, 100])
-            st.plotly_chart(fig_season_strategy, use_container_width=True)
+            st.plotly_chart(fig_season_strategy, width="stretch")
 
             team_strategy = (
                 strategy.melt(
@@ -1195,7 +1228,7 @@ with tabs[4]:
             )
             st.dataframe(
                 team_strategy_pivot.round(1),
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
             )
         else:

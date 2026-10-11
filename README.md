@@ -5,7 +5,7 @@ An end-to-end cricket analytics project that transforms IPL ball-by-ball data in
 Built with Python, Pandas, NumPy, Plotly, and Streamlit, the project combines a reproducible data-processing pipeline with an interactive dashboard and supporting analytical reports.
 
 <!-- Replace the placeholder below after deployment -->
-<!-- Live dashboard: https://YOUR-APP-NAME.streamlit.app -->
+<!-- Live dashboard: https://ipl-intelligence-nkqj6vtrqlbab2gvoygege.streamlit.app -->
 
 ## Project Overview
 

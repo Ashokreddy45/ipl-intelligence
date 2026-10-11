@@ -1,0 +1,8 @@
+check,affected_rows,status
+Negative batter runs,0,PASS
+Negative extras,0,PASS
+Negative total runs,0,PASS
+Runs plus extras do not equal total runs,0,PASS
+Invalid innings number,4,REVIEW
+Legal-ball flag outside 0/1,0,PASS
+Wicket flag outside 0/1,0,PASS

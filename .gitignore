@@ -1,0 +1,34 @@
+# Python environments
+.venv/
+venv/
+env/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local OS/editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Local backups
+*.backup
+*.backup_*
+*.bak
+
+# Generated processed datasets
+data/processed/
+
+# Temporary files
+*.log
+
+# All local backup variants
+*.backup*

@@ -1,0 +1,2 @@
+Source: Cricsheet IPL New CSV archive, https://cricsheet.org/downloads/
+The original source archive is preserved at data/raw/ipl_csv2.zip. Please retain the source LICENSE.txt and required attribution when redistributing.
